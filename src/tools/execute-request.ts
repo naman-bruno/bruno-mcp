@@ -2,7 +2,14 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
 import { executeRequest } from '../core/execute.js';
-import { collectionPathSchema, textResult, unknownCollectionMessage, variablesSchema, type ToolContext } from './helpers.js';
+import {
+  collectionPathSchema,
+  textResult,
+  unknownCollectionMessage,
+  unknownEnvironmentMessage,
+  variablesSchema,
+  type ToolContext
+} from './helpers.js';
 
 // Pattern to detect template variables like {{variableName}}
 const TEMPLATE_VAR = /\{\{\s*[^}\s]+\s*\}\}/;
@@ -57,14 +64,7 @@ export const registerExecuteRequestTool = (server: McpServer, { registry, verbos
       if (environment) {
         const envs = registry.environments(collectionPath);
         if (!envs.includes(environment)) {
-          return textResult(
-            {
-              error: `The environment "${environment}" doesn't exist in the "${collection.name}" collection.`,
-              hint: 'Environment names are case-sensitive. Omit environment to run without one.',
-              availableEnvironments: envs
-            },
-            true
-          );
+          return textResult(unknownEnvironmentMessage(collection, environment, envs), true);
         }
       }
 

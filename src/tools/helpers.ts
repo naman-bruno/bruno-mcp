@@ -5,6 +5,7 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 
 import type { CollectionRegistry } from '../core/collections.js';
 import { collectionsFromWorkspace, isWorkspaceDir } from '../core/discover.js';
+import type { RegisteredCollection } from '../types.js';
 export interface ToolContext {
   registry: CollectionRegistry;
   verbose: boolean;
@@ -44,6 +45,17 @@ export const unknownCollectionMessage = (registry: CollectionRegistry, collectio
   };
 };
 
+export const unknownEnvironmentMessage = (
+  collection: RegisteredCollection,
+  environment: string,
+  availableEnvironments: string[],
+  hint = 'Environment names are case-sensitive. Omit environment to run without one.'
+) => ({
+  error: `The environment "${environment}" doesn't exist in the "${collection.name}" collection.`,
+  hint,
+  availableEnvironments
+});
+
 export const collectionPathSchema = () =>
   z
     .string()
@@ -58,5 +70,5 @@ export const variablesSchema = () =>
     .record(z.string(), z.union([z.string(), z.number(), z.boolean()]))
     .optional()
     .describe(
-      'Override (or add) environment variables for this request, replacing any values from the environment.'
+      'Override (or add) environment variables for this run, replacing any values from the environment.'
     );

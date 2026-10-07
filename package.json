@@ -37,7 +37,7 @@
     "prebuild": "npm run clean",
     "build": "tsc",
     "watch": "tsc --watch",
-    "test": "echo \"no tests yet — add jest + ts-jest and a jest.config.js when writing the first spec\" && exit 0",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "prepack": "npm run build"
   },
   "dependencies": {
@@ -49,10 +49,13 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@jest/globals": "^30.5.2",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.14.1",
     "@types/yargs": "^17.0.33",
+    "jest": "^30.5.2",
     "rimraf": "^5.0.5",
+    "ts-jest": "^29.4.14",
     "typescript": "^5.9.3"
   }
 }

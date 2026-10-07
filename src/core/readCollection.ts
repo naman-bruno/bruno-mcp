@@ -7,7 +7,7 @@ import type { RequestInfo } from '../types.js';
 
 export type CollectionFormat = 'bru' | 'yml';
 
-const FORMAT_FILES: Record<CollectionFormat, { ext: string; collectionFile: string; folderFile: string }> = {
+export const FORMAT_FILES: Record<CollectionFormat, { ext: string; collectionFile: string; folderFile: string }> = {
   yml: { ext: '.yml', collectionFile: 'opencollection.yml', folderFile: 'folder.yml' },
   bru: { ext: '.bru', collectionFile: 'collection.bru', folderFile: 'folder.bru' }
 };
@@ -37,7 +37,13 @@ const readFolderSeq = (dir: string, format: CollectionFormat): number | undefine
   const folderPath = path.join(dir, FORMAT_FILES[format].folderFile);
   if (!fs.existsSync(folderPath)) return undefined;
   try {
-    return parseFolder(fs.readFileSync(folderPath, 'utf8'), { format })?.meta?.seq;
+    const parsed = parseFolder(fs.readFileSync(folderPath, 'utf8'), { format });
+    // The .bru parser returns a rejected promise on malformed files instead of throwing.
+    if (typeof parsed?.then === 'function') {
+      parsed.catch(() => {});
+      return undefined;
+    }
+    return parsed?.meta?.seq;
   } catch (_) {
     return undefined;
   }

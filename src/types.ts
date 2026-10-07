@@ -33,6 +33,22 @@ export interface RunOptions {
   variables?: VariableOverrides;
 }
 
+export interface CollectionRunOptions extends RunOptions {
+  iterations?: number;
+  /** CSV or JSON file, one iteration per row. */
+  dataFile?: string;
+  parallel?: boolean;
+  bail?: boolean;
+}
+
+export interface EnvironmentVariable {
+  name: string;
+  /** Usually a string; .yml environments can also hold numbers, booleans, and objects. */
+  value: unknown;
+  enabled: boolean;
+  secret: boolean;
+}
+
 export interface DiscoveryConfig {
   explicitCollections: string[];
   explicitWorkspaces: string[];

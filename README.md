@@ -14,6 +14,9 @@ It exposes your requests, folders, and environments as MCP tools so an agent can
 | `list_requests` | List the requests in a collection, flattened across folders (relative path + type + method + URL); optional `search` and `method` filters. Deliberately shallow, so it stays fast on large collections. Read-only. |
 | `get_request` | Read one request's full definition from disk: headers, params, body, auth, scripts, tests, assertions, variables, docs, settings. Reads only, sends nothing. Read-only. |
 | `execute_request` | Execute one request via `bru run`; returns status, request and response headers, the response body in full, assertions, and test results. Takes `collectionPath`, `requestPath`, optional `environment` and `variables` overrides. |
+| `run_collection` | Run a whole collection, or a subset of requests/folders (`requests`), via `bru run`; supports `iterations`, a CSV/JSON `dataFile`, `parallel`, `bail`, and `timeoutSeconds` (default 600). Returns a pass/fail summary and a per-request roll-up (outcome, status, response time, failed assertions/tests); headers and bodies are left out. |
+| `list_environments` | List a collection's environments with their variable count and whether they contain secrets. Read-only. |
+| `get_environment` | Read one environment's variables (name, value, enabled, secret). Secret values come back as `<redacted>`. Read-only. |
 
 A collection is addressed by its **path**, not by an id: pass the `path` from `list_collections` as `collectionPath` to the other tools. If you already know where a collection lives, you can pass it directly without listing first. A request is addressed by its `relativePath` within the collection (e.g. `users/get-user.bru`).
 
@@ -25,6 +28,10 @@ A collection is addressed by its **path**, not by an id: pass the `path` from `l
 - Values the run knows to be secrets (`vars:secret` in the selected environment, values from `.env`) are scrubbed everywhere they appear, including URLs and bodies.
 
 Everything else comes back as-is, including **response headers**: a `Set-Cookie` carrying a live session is returned in full. So are response bodies, URL query values, and request headers outside that name list. Treat the result as potentially containing live credentials, and the same for anything `get_request` reads out of a `.bru` file.
+
+`get_environment` replaces the value of every variable marked secret with `<redacted>`. Non-secret values are returned as stored on disk, so a credential kept in a plain variable is returned as-is.
+
+`run_collection` leaves headers and bodies out, but failed assertion/test messages, per-request errors, and `diagnostics` carry only the CLI masking above, so an assertion on a response value can echo that value back.
 
 Response bodies are not truncated by this server. Every MCP client applies its own ceiling, so a second cap here would only lose bodies the client would have accepted.
 

@@ -5,6 +5,7 @@ import yaml from 'js-yaml';
 import type { DiscoveryConfig, RegisteredCollection, CollectionListItem, RequestInfo } from '../types.js';
 import { collectionsFromWorkspace, discoverCollections, isCollectionDir, isWorkspaceDir } from './discover.js';
 import { detectFormat, isRequestFile, readCollectionIndex, type CollectionFormat } from './readCollection.js';
+import { listEnvironmentFiles, type EnvironmentFile } from './environments.js';
 
 const collectionNameFromConfig = (collectionPath: string): string => {
   const brunoJsonPath = path.join(collectionPath, 'bruno.json');
@@ -26,14 +27,8 @@ const collectionNameFromConfig = (collectionPath: string): string => {
   return path.basename(collectionPath);
 };
 
-const listEnvironments = (collectionPath: string): string[] => {
-  const envDir = path.join(collectionPath, 'environments');
-  if (!fs.existsSync(envDir)) return [];
-  return fs
-    .readdirSync(envDir)
-    .filter((f) => f.endsWith('.bru') || f.endsWith('.yml'))
-    .map((f) => f.replace(/\.(bru|yml)$/, ''));
-};
+const listEnvironments = (collectionPath: string): string[] =>
+  listEnvironmentFiles(collectionPath).map((env) => env.name);
 
 export const filterCollections = (
   collections: CollectionListItem[],
@@ -145,6 +140,12 @@ export class CollectionRegistry {
     return listEnvironments(collection.path);
   }
 
+  environmentFiles(collectionPath: string): EnvironmentFile[] {
+    const collection = this.find(collectionPath);
+    if (!collection) return [];
+    return listEnvironmentFiles(collection.path);
+  }
+
   listRequests(collectionPath: string): RequestInfo[] | null {
     const collection = this.find(collectionPath);
     if (!collection) return null;
@@ -170,5 +171,20 @@ export class CollectionRegistry {
     }
 
     return { path: target, format };
+  }
+
+  resolveFolderPath(collectionPath: string, relativePath: string): string | null {
+    const collection = this.find(collectionPath);
+    if (!collection) return null;
+
+    const target = path.resolve(collection.path, relativePath);
+    if (!isInside(collection.path, target)) return null;
+
+    const prefix = path.relative(collection.path, target) + path.sep;
+    try {
+      return readCollectionIndex(collection.path).some((r) => r.relativePath.startsWith(prefix)) ? target : null;
+    } catch (_) {
+      return null;
+    }
   }
 }

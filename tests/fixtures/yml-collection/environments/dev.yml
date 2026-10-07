@@ -1,0 +1,10 @@
+name: dev
+variables:
+  - name: baseUrl
+    value: http://127.0.0.1:1
+  - name: token
+    value: do-not-leak
+    secret: true
+  - name: debug
+    value: "true"
+    disabled: true
